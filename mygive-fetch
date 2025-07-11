@@ -1,0 +1,89 @@
+#!/bin/dash
+
+# mygive-fetch <assignment> <zid> [n]
+# Output the content of a student's submission
+
+# Check argument count
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+    echo "Usage: $0 <assignment> <zid> [n]" >&2
+    exit 1
+fi
+
+assignment="$1"
+zid="$2"
+submission_num="$3"
+
+# Validate assignment name format
+if ! echo "$assignment" | grep -q '^[a-z][a-zA-Z0-9_]*$'; then
+    echo "mygive-fetch: assignment name must start with lowercase letter and contain only letters, numbers and underscore" >&2
+    exit 1
+fi
+
+# Validate student ID format
+if ! echo "$zid" | grep -q '^z[0-9]\{7\}$'; then
+    echo "mygive-fetch: student zid must be 'z' followed by 7 digits" >&2
+    exit 1
+fi
+
+# Check if assignment exists
+if [ ! -d ".mygive/$assignment" ]; then
+    echo "mygive-fetch: assignment '$assignment' not found" >&2
+    exit 1
+fi
+
+# Check if student submission directory exists
+if [ ! -d ".mygive/$assignment/submissions/$zid" ]; then
+    echo "mygive-fetch: no submissions found for student $zid" >&2
+    exit 1
+fi
+
+# Get list of submission files
+submission_files=$(ls ".mygive/$assignment/submissions/$zid" | grep '^submission_[0-9]*$' | sort -n -t_ -k2)
+total_submissions=$(echo "$submission_files" | wc -l)
+
+if [ "$total_submissions" -eq 0 ]; then
+    echo "mygive-fetch: no submissions found for student $zid" >&2
+    exit 1
+fi
+
+# Determine which submission to fetch
+if [ -z "$submission_num" ]; then
+    # Default to last submission
+    target_submission=$(echo "$submission_files" | tail -n 1 | sed 's/submission_//')
+else
+    # Validate submission number format
+    if ! echo "$submission_num" | grep -q '^-?[0-9]\+$'; then
+        echo "mygive-fetch: submission number must be an integer" >&2
+        exit 1
+    fi
+    
+    if [ "$submission_num" -eq 0 ]; then
+        # Last submission
+        target_submission=$(echo "$submission_files" | tail -n 1 | sed 's/submission_//')
+    elif [ "$submission_num" -gt 0 ]; then
+        # Positive index
+        if [ "$submission_num" -gt "$total_submissions" ]; then
+            echo "mygive-fetch: submission $submission_num not found" >&2
+            exit 1
+        fi
+        target_submission=$(echo "$submission_files" | sed -n "${submission_num}p" | sed 's/submission_//')
+    else
+        # Negative index
+        abs_num=$((0 - submission_num))
+        if [ "$abs_num" -ge "$total_submissions" ]; then
+            echo "mygive-fetch: submission $submission_num not found" >&2
+            exit 1
+        fi
+        target_submission=$(echo "$submission_files" | tail -n $((abs_num + 1)) | head -n 1 | sed 's/submission_//')
+    fi
+fi
+
+# Check if target submission file exists
+submission_file=".mygive/$assignment/submissions/$zid/submission_$target_submission"
+if [ ! -f "$submission_file" ]; then
+    echo "mygive-fetch: submission $target_submission not found" >&2
+    exit 1
+fi
+
+# Output submission content
+cat "$submission_file" 

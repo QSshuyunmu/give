@@ -1,0 +1,180 @@
+#!/bin/dash
+
+# mygive-test <assignment> <filename>
+# Run the tests for an assignment
+
+# Check argument count
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <assignment> <filename>" >&2
+    exit 1
+fi
+
+assignment="$1"
+filename="$2"
+
+# Validate assignment name format
+if ! echo "$assignment" | grep -q '^[a-z][a-zA-Z0-9_]*$'; then
+    echo "mygive-test: assignment name must start with lowercase letter and contain only letters, numbers and underscore" >&2
+    exit 1
+fi
+
+# Validate filename format
+if ! echo "$filename" | grep -q '^[a-zA-Z0-9_./-]*$'; then
+    echo "mygive-test: filename contains invalid characters" >&2
+    exit 1
+fi
+
+# Check if assignment exists
+if [ ! -d ".mygive/$assignment" ]; then
+    echo "mygive-test: assignment '$assignment' not found" >&2
+    exit 1
+fi
+
+# Check if tests file exists
+if [ ! -f ".mygive/$assignment/tests"/*.tests ]; then
+    echo "mygive-test: no tests found for assignment '$assignment'" >&2
+    exit 1
+fi
+
+# Check if file to be tested exists
+if [ ! -f "$filename" ]; then
+    echo "mygive-test: file '$filename' not found" >&2
+    exit 1
+fi
+
+# Create temporary directory
+temp_dir=$(mktemp -d)
+trap 'rm -rf "$temp_dir"' EXIT
+
+# Extract tests file
+tests_file=$(ls ".mygive/$assignment/tests"/*.tests | head -n 1)
+tar -xf "$tests_file" -C "$temp_dir"
+
+# Make file executable
+chmod +x "$filename"
+
+# Run tests
+passed=0
+failed=0
+
+for test_dir in "$temp_dir"/*/; do
+    if [ -d "$test_dir" ]; then
+        test_name=$(basename "$test_dir")
+        
+        # Only run tests without marks file
+        if [ ! -f "$test_dir/marks" ]; then
+            # Prepare test arguments
+            args=""
+            if [ -f "$test_dir/arguments" ]; then
+                args=$(cat "$test_dir/arguments")
+            fi
+            
+            # Prepare stdin
+            stdin_file=""
+            if [ -f "$test_dir/stdin" ]; then
+                stdin_file="$test_dir/stdin"
+            fi
+            
+            # Prepare expected stdout and stderr
+            expected_stdout=""
+            expected_stderr=""
+            if [ -f "$test_dir/stdout" ]; then
+                expected_stdout=$(cat "$test_dir/stdout")
+            fi
+            if [ -f "$test_dir/stderr" ]; then
+                expected_stderr=$(cat "$test_dir/stderr")
+            fi
+            
+            # Prepare expected exit status
+            expected_exit=0
+            if [ -f "$test_dir/exit_status" ]; then
+                expected_exit=$(cat "$test_dir/exit_status")
+            fi
+            
+            # Prepare compare options
+            options=""
+            if [ -f "$test_dir/options" ]; then
+                options=$(cat "$test_dir/options")
+            fi
+            
+            # Run program
+            if [ -n "$stdin_file" ]; then
+                actual_output=$(cat "$stdin_file" | "$filename" $args 2>&1)
+            else
+                actual_output=$("$filename" $args 2>&1)
+            fi
+            actual_exit=$?
+            
+            # Separate stdout and stderr (simplified)
+            actual_stdout="$actual_output"
+            actual_stderr=""
+            
+            # Compare results
+            test_passed=true
+            
+            # Check exit status
+            if [ "$actual_exit" -ne "$expected_exit" ]; then
+                test_passed=false
+            fi
+            
+            # Check stdout
+            if [ -n "$expected_stdout" ]; then
+                if [ "$actual_stdout" != "$expected_stdout" ]; then
+                    # Apply compare options
+                    if echo "$options" | grep -q 'b'; then
+                        # Ignore blank line differences
+                        actual_stdout=$(echo "$actual_stdout" | grep -v '^$')
+                        expected_stdout=$(echo "$expected_stdout" | grep -v '^$')
+                    fi
+                    if echo "$options" | grep -q 'c'; then
+                        # Ignore case differences
+                        actual_stdout=$(echo "$actual_stdout" | tr '[:upper:]' '[:lower:]')
+                        expected_stdout=$(echo "$expected_stdout" | tr '[:upper:]' '[:lower:]')
+                    fi
+                    if echo "$options" | grep -q 'd'; then
+                        # Only keep digits and newlines
+                        actual_stdout=$(echo "$actual_stdout" | tr -cd '0-9\n')
+                        expected_stdout=$(echo "$expected_stdout" | tr -cd '0-9\n')
+                    fi
+                    if echo "$options" | grep -q 'w'; then
+                        # Ignore space and tab differences
+                        actual_stdout=$(echo "$actual_stdout" | tr -s ' \t')
+                        expected_stdout=$(echo "$expected_stdout" | tr -s ' \t')
+                    fi
+                    
+                    if [ "$actual_stdout" != "$expected_stdout" ]; then
+                        test_passed=false
+                    fi
+                fi
+            else
+                # Expect no stdout output
+                if [ -n "$actual_stdout" ]; then
+                    test_passed=false
+                fi
+            fi
+            
+            # Check stderr
+            if [ -n "$expected_stderr" ]; then
+                if [ "$actual_stderr" != "$expected_stderr" ]; then
+                    test_passed=false
+                fi
+            else
+                # Expect no stderr output
+                if [ -n "$actual_stderr" ]; then
+                    test_passed=false
+                fi
+            fi
+            
+            # Output result
+            if [ "$test_passed" = true ]; then
+                echo "* Test $test_name passed."
+                passed=$((passed + 1))
+            else
+                echo "* Test $test_name failed."
+                failed=$((failed + 1))
+            fi
+        fi
+    fi
+done
+
+echo "** $passed tests passed, $failed tests failed" 

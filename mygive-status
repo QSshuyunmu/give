@@ -1,0 +1,68 @@
+#!/bin/dash
+
+# mygive-status <zid>
+# List all submissions made by a student
+
+# Check argument count
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <zid>" >&2
+    exit 1
+fi
+
+zid="$1"
+
+# Validate student ID format
+if ! echo "$zid" | grep -q '^z[0-9]\{7\}$'; then
+    echo "mygive-status: student zid must be 'z' followed by 7 digits" >&2
+    exit 1
+fi
+
+# Check if .mygive directory exists
+if [ ! -d ".mygive" ]; then
+    echo "mygive-status: no assignments found" >&2
+    exit 1
+fi
+
+found_submissions=false
+
+# Iterate over all assignments
+for assignment in .mygive/*/; do
+    if [ -d "$assignment" ]; then
+        assignment_name=$(basename "$assignment")
+        
+        # Skip .reference directory
+        if [ "$assignment_name" = ".reference" ]; then
+            continue
+        fi
+        
+        # Check if student has submissions
+        if [ -d "$assignment/submissions/$zid" ]; then
+            submission_count=$(ls "$assignment/submissions/$zid" | grep -c '^submission_[0-9]*$')
+            if [ "$submission_count" -gt 0 ]; then
+                echo "* $submission_count submissions for $assignment_name"
+                found_submissions=true
+                
+                # List all submissions
+                for submission_file in "$assignment/submissions/$zid"/submission_*; do
+                    if [ -f "$submission_file" ] && echo "$submission_file" | grep -q '^.*/submission_[0-9]*$'; then
+                        submission_num=$(basename "$submission_file" | sed 's/submission_//')
+                        info_file="$assignment/submissions/$zid/submission_${submission_num}_info"
+                        
+                        if [ -f "$info_file" ]; then
+                            filename=$(sed -n '1p' "$info_file")
+                            file_size=$(sed -n '2p' "$info_file")
+                            timestamp=$(sed -n '3p' "$info_file")
+                            
+                            echo "submission $submission_num: $filename $file_size bytes @ $timestamp"
+                        fi
+                    fi
+                done
+            fi
+        fi
+    fi
+done
+
+if [ "$found_submissions" = false ]; then
+    echo "mygive-status: no submissions found for student $zid" >&2
+    exit 1
+fi 

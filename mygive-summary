@@ -1,0 +1,36 @@
+#!/bin/dash
+
+# mygive-summary
+# List all assignments and show the number of students who have submitted
+
+# Check argument count
+if [ $# -ne 0 ]; then
+    echo "Usage: $0" >&2
+    exit 1
+fi
+
+# Check if .mygive directory exists
+if [ ! -d ".mygive" ]; then
+    echo "mygive-summary: no assignments found" >&2
+    exit 1
+fi
+
+# Iterate over all assignments
+for assignment in .mygive/*/; do
+    if [ -d "$assignment" ]; then
+        assignment_name=$(basename "$assignment")
+        
+        # Skip .reference directory
+        if [ "$assignment_name" = ".reference" ]; then
+            continue
+        fi
+        
+        # Count number of students who submitted
+        student_count=0
+        if [ -d "$assignment/submissions" ]; then
+            student_count=$(ls "$assignment/submissions" 2>/dev/null | wc -l)
+        fi
+        
+        echo "assignment $assignment_name: submissions from $student_count students"
+    fi
+done 
