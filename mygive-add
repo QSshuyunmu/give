@@ -1,11 +1,11 @@
 #!/bin/dash
 
-# mygive-add <assignment> <tests-file>
+# mygive-add <assignment> <tests>
 # Create a new MyGive assignment
 
 # Check argument count
 if [ $# -ne 2 ]; then
-    echo "Usage: $0 <assignment> <tests-file>" >&2
+    echo "usage: mygive-add <assignment> <tests>" >&2
     exit 1
 fi
 
@@ -14,19 +14,19 @@ tests_file="$2"
 
 # Validate assignment name format
 if ! echo "$assignment" | grep -q '^[a-z][a-zA-Z0-9_]*$'; then
-    echo "mygive-add: assignment name must start with lowercase letter and contain only letters, numbers and underscore" >&2
+    echo "mygive-add: invalid assignment: $assignment" >&2
     exit 1
 fi
 
 # Validate tests file path format
 if ! echo "$tests_file" | grep -q '^[a-zA-Z0-9_./-]*$'; then
-    echo "mygive-add: tests file pathname contains invalid characters" >&2
+    echo "mygive-add: $tests_file: No such file or directory" >&2
     exit 1
 fi
 
 # Check if tests file exists
 if [ ! -f "$tests_file" ]; then
-    echo "mygive-add: tests file '$tests_file' not found" >&2
+    echo "mygive-add: $tests_file: No such file or directory" >&2
     exit 1
 fi
 

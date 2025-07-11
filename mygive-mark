@@ -5,7 +5,7 @@
 
 # Check argument count
 if [ $# -ne 1 ]; then
-    echo "Usage: $0 <assignment>" >&2
+    echo "usage: mygive-mark <assignment>" >&2
     exit 1
 fi
 
@@ -13,19 +13,26 @@ assignment="$1"
 
 # Validate assignment name format
 if ! echo "$assignment" | grep -q '^[a-z][a-zA-Z0-9_]*$'; then
-    echo "mygive-mark: assignment name must start with lowercase letter and contain only letters, numbers and underscore" >&2
+    echo "mygive-mark: invalid assignment: $assignment" >&2
     exit 1
 fi
 
 # Check if assignment exists
 if [ ! -d ".mygive/$assignment" ]; then
-    echo "mygive-mark: assignment '$assignment' not found" >&2
+    echo "mygive-mark: assignment $assignment not found" >&2
     exit 1
 fi
 
-# Check if tests file exists
-if [ ! -f ".mygive/$assignment/tests"/*.tests ]; then
-    echo "mygive-mark: no tests found for assignment '$assignment'" >&2
+# Check if tests file exists (use for loop)
+found_test_file=false
+for f in ".mygive/$assignment/tests"/*.tests; do
+    if [ -f "$f" ]; then
+        found_test_file=true
+        break
+    fi
+done
+if [ "$found_test_file" = false ]; then
+    echo "mygive-mark: no tests found for assignment $assignment" >&2
     exit 1
 fi
 
@@ -43,7 +50,7 @@ for student_dir in ".mygive/$assignment/submissions"/*/; do
         zid=$(basename "$student_dir")
         
         # Get last submission
-        last_submission=$(ls "$student_dir" | grep '^submission_[0-9]*$' | sort -n -t_ -k2 | tail -n 1)
+        last_submission=$(ls "$student_dir" | grep -E '^submission_[0-9]+$' | sort -n -t_ -k2 | tail -n 1)
         if [ -z "$last_submission" ]; then
             continue
         fi
@@ -115,10 +122,11 @@ for student_dir in ".mygive/$assignment/submissions"/*/; do
                     fi
                     
                     # Run program
+                    set -- $args
                     if [ -n "$stdin_file" ]; then
-                        actual_output=$(cat "$stdin_file" | "$submission_file" $args 2>&1)
+                        actual_output=$(cat "$stdin_file" | "$submission_file" "$@" 2>&1)
                     else
-                        actual_output=$("$submission_file" $args 2>&1)
+                        actual_output=$("$submission_file" "$@" 2>&1)
                     fi
                     actual_exit=$?
                     

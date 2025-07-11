@@ -5,7 +5,7 @@
 
 # Check argument count
 if [ $# -ne 2 ]; then
-    echo "Usage: $0 <assignment> <filename>" >&2
+    echo "usage: mygive-test <assignment> <filename>" >&2
     exit 1
 fi
 
@@ -14,31 +14,38 @@ filename="$2"
 
 # Validate assignment name format
 if ! echo "$assignment" | grep -q '^[a-z][a-zA-Z0-9_]*$'; then
-    echo "mygive-test: assignment name must start with lowercase letter and contain only letters, numbers and underscore" >&2
+    echo "mygive-test: invalid assignment: $assignment" >&2
     exit 1
 fi
 
 # Validate filename format
 if ! echo "$filename" | grep -q '^[a-zA-Z0-9_./-]*$'; then
-    echo "mygive-test: filename contains invalid characters" >&2
+    echo "mygive-test: $filename: No such file or directory" >&2
     exit 1
 fi
 
 # Check if assignment exists
 if [ ! -d ".mygive/$assignment" ]; then
-    echo "mygive-test: assignment '$assignment' not found" >&2
+    echo "mygive-test: assignment $assignment not found" >&2
     exit 1
 fi
 
-# Check if tests file exists
-if [ ! -f ".mygive/$assignment/tests"/*.tests ]; then
-    echo "mygive-test: no tests found for assignment '$assignment'" >&2
+# Check if tests file exists (use for loop)
+found_test_file=false
+for f in ".mygive/$assignment/tests"/*.tests; do
+    if [ -f "$f" ]; then
+        found_test_file=true
+        break
+    fi
+done
+if [ "$found_test_file" = false ]; then
+    echo "mygive-test: no tests found for assignment $assignment" >&2
     exit 1
 fi
 
 # Check if file to be tested exists
 if [ ! -f "$filename" ]; then
-    echo "mygive-test: file '$filename' not found" >&2
+    echo "mygive-test: $filename: No such file or directory" >&2
     exit 1
 fi
 
@@ -98,10 +105,11 @@ for test_dir in "$temp_dir"/*/; do
             fi
             
             # Run program
+            set -- $args
             if [ -n "$stdin_file" ]; then
-                actual_output=$(cat "$stdin_file" | "$filename" $args 2>&1)
+                actual_output=$(cat "$stdin_file" | "$filename" "$@" 2>&1)
             else
-                actual_output=$("$filename" $args 2>&1)
+                actual_output=$("$filename" "$@" 2>&1)
             fi
             actual_exit=$?
             

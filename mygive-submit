@@ -5,7 +5,7 @@
 
 # Check argument count
 if [ $# -ne 3 ]; then
-    echo "Usage: $0 <assignment> <zid> <filename>" >&2
+    echo "usage: mygive-submit <assignment> <zid> <filename>" >&2
     exit 1
 fi
 
@@ -15,44 +15,42 @@ filename="$3"
 
 # Validate assignment name format
 if ! echo "$assignment" | grep -q '^[a-z][a-zA-Z0-9_]*$'; then
-    echo "mygive-submit: assignment name must start with lowercase letter and contain only letters, numbers and underscore" >&2
+    echo "mygive-submit: assignment $assignment not found" >&2
     exit 1
 fi
 
 # Validate student ID format
 if ! echo "$zid" | grep -q '^z[0-9]\{7\}$'; then
-    echo "mygive-submit: student zid must be 'z' followed by 7 digits" >&2
+    echo "mygive-submit: invalid zid: $zid" >&2
     exit 1
 fi
 
 # Validate filename format
 if ! echo "$filename" | grep -q '^[a-zA-Z0-9_./-]*$'; then
-    echo "mygive-submit: filename contains invalid characters" >&2
+    echo "mygive-submit: $filename: No such file or directory" >&2
     exit 1
 fi
 
 # Check if assignment exists
 if [ ! -d ".mygive/$assignment" ]; then
-    echo "mygive-submit: assignment '$assignment' not found" >&2
+    echo "mygive-submit: assignment $assignment not found" >&2
     exit 1
 fi
 
 # Check if submission file exists
 if [ ! -f "$filename" ]; then
-    echo "mygive-submit: submission file '$filename' not found" >&2
+    echo "mygive-submit: $filename: No such file or directory" >&2
     exit 1
 fi
 
 # Create student directory if it does not exist
-if [ ! -d ".mygive/$assignment/submissions/$zid" ]; then
-    mkdir -p ".mygive/$assignment/submissions/$zid"
+student_dir=".mygive/$assignment/submissions/$zid"
+if [ ! -d "$student_dir" ]; then
+    mkdir -p "$student_dir"
 fi
 
-# Calculate next submission number
-submission_count=0
-if [ -d ".mygive/$assignment/submissions/$zid" ]; then
-    submission_count=$(ls ".mygive/$assignment/submissions/$zid" | wc -l)
-fi
+# Calculate next submission number (only count submission_N files)
+submission_count=$(ls "$student_dir" 2>/dev/null | grep -E '^submission_[0-9]+$' | wc -l)
 submission_count=$((submission_count + 1))
 
 # Get file size
@@ -62,11 +60,11 @@ file_size=$(wc -c < "$filename")
 current_time=$(date '+%a %b %d %H:%M:%S %Y')
 
 # Copy submission file
-cp "$filename" ".mygive/$assignment/submissions/$zid/submission_$submission_count"
+cp "$filename" "$student_dir/submission_$submission_count"
 
 # Save submission info
-echo "$filename" > ".mygive/$assignment/submissions/$zid/submission_${submission_count}_info"
-echo "$file_size" >> ".mygive/$assignment/submissions/$zid/submission_${submission_count}_info"
-echo "$current_time" >> ".mygive/$assignment/submissions/$zid/submission_${submission_count}_info"
+echo "$filename" > "$student_dir/submission_${submission_count}_info"
+echo "$file_size" >> "$student_dir/submission_${submission_count}_info"
+echo "$current_time" >> "$student_dir/submission_${submission_count}_info"
 
 echo "Submission accepted - submission $submission_count: $filename $file_size bytes @ $current_time" 

@@ -5,7 +5,7 @@
 
 # Check argument count
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-    echo "Usage: $0 <assignment> <zid> [n]" >&2
+    echo "usage: mygive-fetch <assignment> <zid> [n]" >&2
     exit 1
 fi
 
@@ -13,21 +13,23 @@ assignment="$1"
 zid="$2"
 submission_num="$3"
 
+submission_num=$(echo "$submission_num" | tr -d '[:space:]')
+
 # Validate assignment name format
 if ! echo "$assignment" | grep -q '^[a-z][a-zA-Z0-9_]*$'; then
-    echo "mygive-fetch: assignment name must start with lowercase letter and contain only letters, numbers and underscore" >&2
+    echo "mygive-fetch: invalid assignment: $assignment" >&2
     exit 1
 fi
 
 # Validate student ID format
 if ! echo "$zid" | grep -q '^z[0-9]\{7\}$'; then
-    echo "mygive-fetch: student zid must be 'z' followed by 7 digits" >&2
+    echo "mygive-fetch: invalid zid: $zid" >&2
     exit 1
 fi
 
 # Check if assignment exists
 if [ ! -d ".mygive/$assignment" ]; then
-    echo "mygive-fetch: assignment '$assignment' not found" >&2
+    echo "mygive-fetch: assignment $assignment not found" >&2
     exit 1
 fi
 
@@ -38,7 +40,7 @@ if [ ! -d ".mygive/$assignment/submissions/$zid" ]; then
 fi
 
 # Get list of submission files
-submission_files=$(ls ".mygive/$assignment/submissions/$zid" | grep '^submission_[0-9]*$' | sort -n -t_ -k2)
+submission_files=$(ls ".mygive/$assignment/submissions/$zid" | grep -E '^submission_[0-9]+$' | sort -n -t_ -k2)
 total_submissions=$(echo "$submission_files" | wc -l)
 
 if [ "$total_submissions" -eq 0 ]; then
@@ -52,11 +54,11 @@ if [ -z "$submission_num" ]; then
     target_submission=$(echo "$submission_files" | tail -n 1 | sed 's/submission_//')
 else
     # Validate submission number format
-    if ! echo "$submission_num" | grep -q '^-?[0-9]\+$'; then
+    if [ -n "$submission_num" ] && ! printf '%s' "$submission_num" | grep -Eq '^-?[0-9]+$'; then
         echo "mygive-fetch: submission number must be an integer" >&2
         exit 1
     fi
-    
+
     if [ "$submission_num" -eq 0 ]; then
         # Last submission
         target_submission=$(echo "$submission_files" | tail -n 1 | sed 's/submission_//')

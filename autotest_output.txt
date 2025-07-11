@@ -1,0 +1,1280 @@
+bash -n mygive-* *.sh # mygive-add
+check_hashbang.sh mygive-* # mygive-add
+check_features_used.sh mygive-* # mygive-add
+shellcheck -x -a -P='.' --shell=dash  -e2010,2011,2012,2038 mygive-*; true # mygive-add
+
+In mygive-mark line 27:
+if [ ! -f ".mygive/$assignment/tests"/*.tests ]; then
+          ^-- SC2144 (error): -f doesn't work with globs. Use a for loop.
+
+
+In mygive-mark line 119:
+                        actual_output=$(cat "$stdin_file" | "$submission_file" $args 2>&1)
+                                            ^-----------^ SC2002 (style): Useless cat. Consider 'cmd < file | ..' or 'cmd file | ..' instead.
+                                                                               ^---^ SC2086 (info): Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+                        actual_output=$(cat "$stdin_file" | "$submission_file" "$args" 2>&1)
+
+
+In mygive-mark line 121:
+                        actual_output=$("$submission_file" $args 2>&1)
+                                                           ^---^ SC2086 (info): Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+                        actual_output=$("$submission_file" "$args" 2>&1)
+
+
+In mygive-test line 34:
+if [ ! -f ".mygive/$assignment/tests"/*.tests ]; then
+          ^-- SC2144 (error): -f doesn't work with globs. Use a for loop.
+
+
+In mygive-test line 102:
+                actual_output=$(cat "$stdin_file" | "$filename" $args 2>&1)
+                                    ^-----------^ SC2002 (style): Useless cat. Consider 'cmd < file | ..' or 'cmd file | ..' instead.
+                                                                ^---^ SC2086 (info): Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+                actual_output=$(cat "$stdin_file" | "$filename" "$args" 2>&1)
+
+
+In mygive-test line 104:
+                actual_output=$("$filename" $args 2>&1)
+                                            ^---^ SC2086 (info): Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+                actual_output=$("$filename" "$args" 2>&1)
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2144 -- -f doesn't work with globs. Use a...
+  https://www.shellcheck.net/wiki/SC2086 -- Double quote to prevent globbing ...
+  https://www.shellcheck.net/wiki/SC2002 -- Useless cat. Consider 'cmd < file...
+Test 1_add (add: 1 assignment) - passed
+Test 2_add (add: existing assignment) - passed
+Test 3_add (add: incorrect number of arguments) - failed (Incorrect stderr)
+Your program produced this line of stderr:
+Usage: ./mygive-add <assignment> <tests-file>
+
+The correct 1 lines of stderr for this test were:
+usage: mygive-add <assignment> <tests>
+
+The difference between your stderr(-) and the correct stderr(+) is:
+- Usage: ./mygive-add <assignment> <tests-file>
+? ^      --                              -----
+
++ usage: mygive-add <assignment> <tests>
+? ^
+
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab1 multiply.tests multiply.tests
+Test 4_add (add: stdout if tests file doesn't exist) - failed (No output produced)
+Your program produced no output
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab1 multiply.toasts 2>/dev/null
+Test 5_add (add: stderr if tests file doesn't exist) - failed (Incorrect stderr)
+Your program produced this line of stderr:
+mygive-add: tests file 'multiply.toasts' not found
+
+The correct 1 lines of stderr for this test were:
+mygive-add: multiply.toasts: No such file or directory
+
+The difference between your stderr(-) and the correct stderr(+) is:
+- mygive-add: tests file 'multiply.toasts' not found
++ mygive-add: multiply.toasts: No such file or directory
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab1 multiply.toasts >/dev/null
+Test 6_add (add: invalid name) - failed (Incorrect stderr)
+Your program produced this line of stderr:
+mygive-add: assignment name must start with lowercase letter and contain only letters, numbers and underscore
+
+The correct 1 lines of stderr for this test were:
+mygive-add: invalid assignment: hello 2041
+
+The difference between your stderr(-) and the correct stderr(+) is:
+- mygive-add: assignment name must start with lowercase letter and contain only letters, numbers and underscore
++ mygive-add: invalid assignment: hello 2041
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add 'hello 2041' multiply.tests
+Test 7_summary (summary: 1 assignment) - passed
+Test 8_submit (submit) - passed
+Test 9_submit (submit: error handling) - failed (Incorrect stderr)
+Your program produced these 4 lines of stderr:
+mygive-submit: assignment 'lab3' not found
+mygive-submit: submission file 'multiplyyyyyyyyyyyyy.sh' not found
+mygive-submit: student zid must be 'z' followed by 7 digits
+Usage: ./mygive-submit <assignment> <zid> <filename>
+
+The correct 4 lines of stderr for this test were:
+mygive-submit: assignment lab3 not found
+mygive-submit: multiplyyyyyyyyyyyyy.sh: No such file or directory
+mygive-submit: invalid zid: z12345678
+usage: mygive-submit <assignment> <zid> <filename>
+
+The difference between your stderr(-) and the correct stderr(+) is:
+- mygive-submit: assignment 'lab3' not found
+?                           -    -
+
++ mygive-submit: assignment lab3 not found
+- mygive-submit: submission file 'multiplyyyyyyyyyyyyy.sh' not found
+- mygive-submit: student zid must be 'z' followed by 7 digits
++ mygive-submit: multiplyyyyyyyyyyyyy.sh: No such file or directory
++ mygive-submit: invalid zid: z12345678
+- Usage: ./mygive-submit <assignment> <zid> <filename>
+? ^      --
+
++ usage: mygive-submit <assignment> <zid> <filename>
+? ^
+
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab2 multiply.tests
+FAKETIME="1996-03-02 13:32:42" mygive-submit lab3 z1234567 multiply_wrong.sh
+FAKETIME="1996-03-02 13:34:11" mygive-submit lab2 z1234567 multiplyyyyyyyyyyyyy.sh
+FAKETIME="1996-03-02 13:36:07" mygive-submit lab2 z12345678 multiply.sh
+FAKETIME="1996-03-02 13:37:25" mygive-submit lab2 z1234567
+Test 10_status (status 1 assignment) - failed (errors)
+Your program produced these errors:
+mygive-status: no submissions found for student z1234567
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab2 multiply.tests
+FAKETIME="2003-12-05 20:51:32" mygive-status z1234567
+FAKETIME="2003-12-05 20:52:51" mygive-submit lab2 z1234567 multiply_wrong.sh
+FAKETIME="2003-12-05 20:53:58" mygive-status z1234567
+FAKETIME="2003-12-05 20:55:05" mygive-submit lab2 z1234567 multiply_wrong.sh
+FAKETIME="2003-12-05 20:55:44" mygive-status z1234567
+FAKETIME="2003-12-05 20:55:55" mygive-submit lab2 z1234567 multiply_right.py
+FAKETIME="2003-12-05 20:57:25" mygive-status z1234567
+Test 11_fetch (fetch) - failed (Incorrect output)
+Your program produced these 9 lines of output:
+directory .mygive created
+assignment lab2 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Sun Jul 17 09:24:37 1983
+Submission accepted - submission 3: multiply_right.py 78 bytes @ Sun Jul 17 09:26:18 1983
+Submission accepted - submission 5: multiply.sh 40 bytes @ Sun Jul 17 09:26:24 1983
+#!/bin/dash
+a=$1
+read b
+echo $((a * b))
+
+The correct 9 lines of output for this test were:
+directory .mygive created
+assignment lab2 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Sun Jul 17 09:24:37 1983
+Submission accepted - submission 2: multiply_right.py 78 bytes @ Sun Jul 17 09:26:18 1983
+Submission accepted - submission 3: multiply.sh 40 bytes @ Sun Jul 17 09:26:24 1983
+#!/bin/dash
+a=$1
+read b
+echo $((a * b))
+
+The difference between your output(-) and the correct output(+) is:
+...
+  Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Sun Jul 17 09:24:37 1983
+- Submission accepted - submission 3: multiply_right.py 78 bytes @ Sun Jul 17 09:26:18 1983
+?                                  ^
+
++ Submission accepted - submission 2: multiply_right.py 78 bytes @ Sun Jul 17 09:26:18 1983
+?                                  ^
+
+- Submission accepted - submission 5: multiply.sh 40 bytes @ Sun Jul 17 09:26:24 1983
+?                                  ^
+
++ Submission accepted - submission 3: multiply.sh 40 bytes @ Sun Jul 17 09:26:24 1983
+?                                  ^
+
+...
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab2 multiply.tests
+FAKETIME="1983-07-17 09:24:37" mygive-submit lab2 z1234567 multiply_wrong.sh
+FAKETIME="1983-07-17 09:26:18" mygive-submit lab2 z1234567 multiply_right.py
+FAKETIME="1983-07-17 09:26:24" mygive-submit lab2 z1234567 multiply.sh
+mygive-fetch lab2 z1234567 3
+Test 12_fetch (fetch - no submission number) - failed (Incorrect output)
+Your program produced these 9 lines of output:
+directory .mygive created
+assignment lab2 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Tue Jan 30 11:19:22 1973
+Submission accepted - submission 3: multiply_right.py 78 bytes @ Tue Jan 30 11:20:46 1973
+Submission accepted - submission 5: multiply.sh 40 bytes @ Tue Jan 30 11:21:55 1973
+#!/bin/dash
+a=$1
+read b
+echo $((a * b))
+
+The correct 9 lines of output for this test were:
+directory .mygive created
+assignment lab2 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Tue Jan 30 11:19:22 1973
+Submission accepted - submission 2: multiply_right.py 78 bytes @ Tue Jan 30 11:20:46 1973
+Submission accepted - submission 3: multiply.sh 40 bytes @ Tue Jan 30 11:21:55 1973
+#!/bin/dash
+a=$1
+read b
+echo $((a * b))
+
+The difference between your output(-) and the correct output(+) is:
+...
+  Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Tue Jan 30 11:19:22 1973
+- Submission accepted - submission 3: multiply_right.py 78 bytes @ Tue Jan 30 11:20:46 1973
+?                                  ^
+
++ Submission accepted - submission 2: multiply_right.py 78 bytes @ Tue Jan 30 11:20:46 1973
+?                                  ^
+
+- Submission accepted - submission 5: multiply.sh 40 bytes @ Tue Jan 30 11:21:55 1973
+?                                  ^
+
++ Submission accepted - submission 3: multiply.sh 40 bytes @ Tue Jan 30 11:21:55 1973
+?                                  ^
+
+...
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab2 multiply.tests
+FAKETIME="1973-01-30 11:19:22" mygive-submit lab2 z1234567 multiply_wrong.sh
+FAKETIME="1973-01-30 11:20:46" mygive-submit lab2 z1234567 multiply_right.py
+FAKETIME="1973-01-30 11:21:55" mygive-submit lab2 z1234567 multiply.sh
+mygive-fetch lab2 z1234567
+Test 13_fetch (fetch - negative submission number) - failed (Incorrect output)
+Your program produced these 9 lines of output:
+directory .mygive created
+assignment lab2 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Wed Jul 15 20:19:53 2037
+Submission accepted - submission 3: multiply_right.py 78 bytes @ Wed Jul 15 20:20:21 2037
+Submission accepted - submission 5: multiply.sh 40 bytes @ Wed Jul 15 20:21:22 2037
+#!/bin/dash
+a=$1
+read b
+echo $((a * a + 0 * b))
+
+The correct 9 lines of output for this test were:
+directory .mygive created
+assignment lab2 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Wed Jul 15 20:19:53 2037
+Submission accepted - submission 2: multiply_right.py 78 bytes @ Wed Jul 15 20:20:21 2037
+Submission accepted - submission 3: multiply.sh 40 bytes @ Wed Jul 15 20:21:22 2037
+#!/bin/dash
+a=$1
+read b
+echo $((a * a + 0 * b))
+
+The difference between your output(-) and the correct output(+) is:
+...
+  Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Wed Jul 15 20:19:53 2037
+- Submission accepted - submission 3: multiply_right.py 78 bytes @ Wed Jul 15 20:20:21 2037
+?                                  ^
+
++ Submission accepted - submission 2: multiply_right.py 78 bytes @ Wed Jul 15 20:20:21 2037
+?                                  ^
+
+- Submission accepted - submission 5: multiply.sh 40 bytes @ Wed Jul 15 20:21:22 2037
+?                                  ^
+
++ Submission accepted - submission 3: multiply.sh 40 bytes @ Wed Jul 15 20:21:22 2037
+?                                  ^
+
+...
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab2 multiply.tests
+FAKETIME="2037-07-15 20:19:53" mygive-submit lab2 z1234567 multiply_wrong.sh
+FAKETIME="2037-07-15 20:20:21" mygive-submit lab2 z1234567 multiply_right.py
+FAKETIME="2037-07-15 20:21:22" mygive-submit lab2 z1234567 multiply.sh
+mygive-fetch lab2 z1234567 -2
+Test 14_fetch (fetch error) - failed (Incorrect stderr)
+Your program produced this line of stderr:
+mygive-fetch: submission 4 not found
+
+The correct 1 lines of stderr for this test were:
+mygive-fetch: submission 4 not found for lab2
+
+The difference between your stderr(-) and the correct stderr(+) is:
+- mygive-fetch: submission 4 not found
++ mygive-fetch: submission 4 not found for lab2
+?                                     +++++++++
+
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab2 multiply.tests
+FAKETIME="2018-12-08 07:44:07" mygive-submit lab2 z1234567 multiply_wrong.sh
+FAKETIME="2018-12-08 07:45:51" mygive-submit lab2 z1234567 multiply_right.py
+FAKETIME="2018-12-08 07:46:42" mygive-submit lab2 z1234567 multiply.sh
+mygive-fetch lab2 z1234567 4
+Test 15_test (test) - failed (Incorrect output)
+Your program produced these 10 lines of output:
+directory .mygive created
+assignment multiply_exercise created
+* Test test_a passed.
+* Test test_b passed.
+* Test test_c passed.
+** 3 tests passed, 0 tests failed
+* Test test_a passed.
+* Test test_b failed.
+* Test test_c failed.
+** 1 tests passed, 2 tests failed
+
+The correct 22 lines of output for this test were:
+directory .mygive created
+assignment multiply_exercise created
+* Test test_a passed.
+* Test test_b passed.
+* Test test_c passed.
+** 3 tests passed, 0 tests failed
+* Test test_a passed.
+* Test test_b failed.
+--- Incorrect stdout of 3 bytes:
+25
+
+--- Correct stdout is these 3 bytes:
+10
+
+* Test test_c failed.
+--- Incorrect stdout of 3 bytes:
+16
+
+--- Correct stdout is these 3 bytes:
+24
+
+** 1 tests passed, 2 tests failed
+
+The difference between your output(-) and the correct output(+) is:
+...
+  * Test test_b failed.
++ --- Incorrect stdout of 3 bytes:
++ 25
++ 
++ --- Correct stdout is these 3 bytes:
++ 10
++ 
+  * Test test_c failed.
++ --- Incorrect stdout of 3 bytes:
++ 16
++ 
++ --- Correct stdout is these 3 bytes:
++ 24
++ 
+  ** 1 tests passed, 2 tests failed
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add multiply_exercise multiply.tests
+mygive-test multiply_exercise multiply_right.py
+mygive-test multiply_exercise multiply_wrong.sh
+Test 16_test (test: argument error handling) - failed (Incorrect stderr)
+Your program produced these 3 lines of stderr:
+Usage: ./mygive-test <assignment> <filename>
+mygive-test: assignment 'divide_exercise' not found
+Usage: ./mygive-test <assignment> <filename>
+
+The correct 3 lines of stderr for this test were:
+usage: mygive-test <assignment> <filename>
+mygive-test: assignment divide_exercise not found
+usage: mygive-test <assignment> <filename>
+
+The difference between your stderr(-) and the correct stderr(+) is:
+- Usage: ./mygive-test <assignment> <filename>
+? ^      --
+
++ usage: mygive-test <assignment> <filename>
+? ^
+
+- mygive-test: assignment 'divide_exercise' not found
+?                         -               -
+
++ mygive-test: assignment divide_exercise not found
+- Usage: ./mygive-test <assignment> <filename>
+? ^      --
+
++ usage: mygive-test <assignment> <filename>
+? ^
+
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add multiply_exercise multiply.tests
+mygive-test multiply_exercise
+mygive-test divide_exercise multiply_right.py
+mygive-test divide_exercise multiply_right.py multiply_wrong.sh
+Test 17_mark (mark 1 assignment) - failed (errors)
+Your program produced these errors:
+mygive-status: no submissions found for student z1234567
+tar: marking1/stdout: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking1/marks: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking1/stdin: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking1/arguments: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking1: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking2/stdout: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking2/marks: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking2/stdin: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking2/arguments: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking2: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking3/stdout: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking3/marks: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking3/stdin: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking3/arguments: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking3: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking4/stdout: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking4/marks: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking4/stdin: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking4/arguments: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking4: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_a/stdout: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_a/stdin: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_a/arguments: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_a: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_b/stdout: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_b/stdin: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_b/arguments: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_b: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_c/stdout: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_c/stdin: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_c/arguments: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: test_c: time stamp 2025-06-24 20:57:29 is 806375609 s in the future
+tar: marking1/stdout: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking1/marks: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking1/stdin: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking1/arguments: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking1: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking2/stdout: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking2/marks: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking2/stdin: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking2/arguments: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking2: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking3/stdout: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking3/marks: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking3/stdin: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking3/arguments: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking3: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking4/stdout: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking4/marks: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking4/stdin: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking4/arguments: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: marking4: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_a/stdout: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_a/stdin: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_a/arguments: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_a: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_b/stdout: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_b/stdin: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_b/arguments: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_b: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_c/stdout: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_c/stdin: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_c/arguments: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+tar: test_c: time stamp 2025-06-24 20:57:29 is 806375482 s in the future
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add lab2 multiply.tests
+FAKETIME="1999-12-05 20:41:48" mygive-status z1234567
+FAKETIME="1999-12-05 20:42:50" mygive-submit lab2 z1234567 multiply_wrong.sh
+FAKETIME="1999-12-05 20:44:00" mygive-mark lab2
+FAKETIME="1999-12-05 20:44:35" mygive-submit lab2 z1234567 multiply_right.py
+FAKETIME="1999-12-05 20:46:07" mygive-mark lab2
+Test 18_summary (rm) - failed (Incorrect output)
+Your program produced these 16 lines of output:
+directory .mygive created
+assignment assignment_1 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Fri Jan 16 00:47:25 2015
+Submission accepted - submission 3: multiply_right.py 78 bytes @ Fri Jan 16 00:49:04 2015
+Submission accepted - submission 1: multiply_right.py 78 bytes @ Fri Jan 16 00:51:02 2015
+assignment assignment_2 created
+assignment assignment_3 created
+assignment assignment_1: submissions from 2 students
+assignment assignment_2: submissions from 0 students
+assignment assignment_3: submissions from 0 students
+assignment assignment_2 removed
+assignment assignment_1: submissions from 2 students
+assignment assignment_3: submissions from 0 students
+assignment assignment_1 removed
+assignment assignment_3: submissions from 0 students
+assignment assignment_3 removed
+
+The correct 17 lines of output for this test were:
+directory .mygive created
+assignment assignment_1 created
+Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Fri Jan 16 00:47:25 2015
+Submission accepted - submission 2: multiply_right.py 78 bytes @ Fri Jan 16 00:49:04 2015
+Submission accepted - submission 1: multiply_right.py 78 bytes @ Fri Jan 16 00:51:02 2015
+assignment assignment_2 created
+assignment assignment_3 created
+assignment assignment_1: submissions from 2 students
+assignment assignment_2: submissions from 0 students
+assignment assignment_3: submissions from 0 students
+assignment assignment_2 removed
+assignment assignment_1: submissions from 2 students
+assignment assignment_3: submissions from 0 students
+assignment assignment_1 removed
+assignment assignment_3: submissions from 0 students
+assignment assignment_3 removed
+no assignments
+
+The difference between your output(-) and the correct output(+) is:
+...
+  Submission accepted - submission 1: multiply_wrong.sh 48 bytes @ Fri Jan 16 00:47:25 2015
+- Submission accepted - submission 3: multiply_right.py 78 bytes @ Fri Jan 16 00:49:04 2015
+?                                  ^
+
++ Submission accepted - submission 2: multiply_right.py 78 bytes @ Fri Jan 16 00:49:04 2015
+?                                  ^
+
+  assignment assignment_3 removed
++ no assignments
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add assignment_1 multiply.tests
+FAKETIME="2015-01-16 00:47:25" mygive-submit assignment_1 z1234567 multiply_wrong.sh
+FAKETIME="2015-01-16 00:49:04" mygive-submit assignment_1 z1234567 multiply_right.py
+FAKETIME="2015-01-16 00:51:02" mygive-submit assignment_1 z1234568 multiply_right.py
+mygive-add assignment_2 multiply.tests
+mygive-add assignment_3 multiply.tests
+mygive-summary
+mygive-rm assignment_2
+mygive-summary
+mygive-rm assignment_1
+mygive-summary
+mygive-rm assignment_3
+mygive-summary
+Test 19_summary (add,rm,add) - failed (Incorrect output)
+Your program produced these 6 lines of output:
+directory .mygive created
+assignment assignment_1 created
+assignment assignment_1: submissions from 0 students
+assignment assignment_1 removed
+assignment assignment_1 created
+assignment assignment_1: submissions from 0 students
+
+The correct 7 lines of output for this test were:
+directory .mygive created
+assignment assignment_1 created
+assignment assignment_1: submissions from 0 students
+assignment assignment_1 removed
+no assignments
+assignment assignment_1 created
+assignment assignment_1: submissions from 0 students
+
+The difference between your output(-) and the correct output(+) is:
+...
+  assignment assignment_1 removed
++ no assignments
+  assignment assignment_1 created
+...
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add assignment_1 multiply.tests
+mygive-add assignment_1 hello.tests
+mygive-summary
+mygive-rm assignment_1
+mygive-summary
+mygive-add assignment_1 hello.tests
+mygive-summary
+Test 20_mark (test newline handling) - failed (errors)
+Your program produced these errors:
+tar: five_newlines/stdout: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: five_newlines/marks: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: five_newlines/arguments: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: five_newlines: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: four_newlines/stdout: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: four_newlines/arguments: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: four_newlines: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: no_newline/stdout: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: no_newline/arguments: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: no_newline: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: no_output: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: one_newline/stdout: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: one_newline/arguments: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: one_newline: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: ten_newlines/stdout: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: ten_newlines/marks: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: ten_newlines/arguments: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: ten_newlines: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: three_newlines/stdout: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: three_newlines/arguments: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: three_newlines: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: two_newlines/stdout: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: two_newlines/arguments: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+tar: two_newlines: time stamp 2025-06-24 20:57:29 is 971082258 s in the future
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add hello hello.tests
+mygive-test hello hello.sh
+mygive-test hello hello_wrong0.sh
+FAKETIME="1994-09-16 11:51:06" mygive-submit hello z5000000 hello.sh
+FAKETIME="1994-09-16 11:51:15" mygive-submit hello z6000000 hello_wrong0.sh
+FAKETIME="1994-09-16 11:53:11" mygive-mark hello
+Test 21_mark (test option handling) - failed (Incorrect output)
+Your program produced these 54 lines of output:
+directory .mygive created
+assignment answer created
+* Test check_bcw passed.
+* Test check_blank_lines passed.
+* Test check_case passed.
+* Test check_digits passed.
+* Test check_whitespace passed.
+* Test default passed.
+* Test ignore_bcw passed.
+* Test ignore_blank_lines passed.
+* Test ignore_case passed.
+* Test ignore_digits passed.
+* Test ignore_whitespace passed.
+** 11 tests passed, 0 tests failed
+* Test check_bcw failed.
+* Test check_blank_lines failed.
+* Test check_case failed.
+* Test check_digits failed.
+* Test check_whitespace failed.
+* Test default passed.
+* Test ignore_bcw passed.
+* Test ignore_blank_lines passed.
+* Test ignore_case passed.
+* Test ignore_digits passed.
+* Test ignore_whitespace failed.
+** 5 tests passed, 6 tests failed
+Submission accepted - submission 1: answer.sh 47 bytes @ Mon Jun 06 13:36:48 2050
+Submission accepted - submission 1: answer_wrong.sh 407 bytes @ Mon Jun 06 13:38:24 2050
+*** Student z1234567 - submission 1: answer.sh 47 bytes @ Mon Jun 06 13:36:48 2050
+* Test check_bcw_marking passed (1 marks).
+* Test check_blank_lines_marking passed (1 marks).
+* Test check_case_marking passed (1 marks).
+* Test check_digits_marking passed (1 marks).
+* Test check_whitespace_marking passed (1 marks).
+* Test default_marking passed (1 marks).
+* Test ignore_bcw_marking passed (1 marks).
+* Test ignore_blank_lines_marking passed (1 marks).
+* Test ignore_case_marking passed (1 marks).
+* Test ignore_digits_marking passed (1 marks).
+* Test ignore_whitespace_marking passed (1 marks).
+** 11 tests passed, 0 tests failed - mark: 11/11
+*** Student z7654321 - submission 1: answer_wrong.sh 407 bytes @ Mon Jun 06 13:38:24 2050
+* Test check_bcw_marking failed (1 marks).
+* Test check_blank_lines_marking failed (1 marks).
+* Test check_case_marking failed (1 marks).
+* Test check_digits_marking failed (1 marks).
+* Test check_whitespace_marking failed (1 marks).
+* Test default_marking passed (1 marks).
+* Test ignore_bcw_marking passed (1 marks).
+* Test ignore_blank_lines_marking passed (1 marks).
+* Test ignore_case_marking passed (1 marks).
+* Test ignore_digits_marking passed (1 marks).
+* Test ignore_whitespace_marking failed (1 marks).
+** 5 tests passed, 6 tests failed - mark: 5/11
+
+The correct 154 lines of output for this test were:
+directory .mygive created
+assignment answer created
+* Test check_bcw passed.
+* Test check_blank_lines passed.
+* Test check_case passed.
+* Test check_digits passed.
+* Test check_whitespace passed.
+* Test default passed.
+* Test ignore_bcw passed.
+* Test ignore_blank_lines passed.
+* Test ignore_case passed.
+* Test ignore_digits passed.
+* Test ignore_whitespace passed.
+** 11 tests passed, 0 tests failed
+* Test check_bcw failed.
+--- Incorrect stdout of 19 bytes:
+THE
+answer  is 42
+
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_blank_lines failed.
+--- Incorrect stdout of 19 bytes:
+The
+answer is  42
+
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_case failed.
+--- Incorrect stdout of 19 bytes:
+the
+
+ANSWER is  42
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_digits failed.
+--- Incorrect stdout of 48 bytes:
+There is extra
+text here
+but answer is still 42
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_whitespace failed.
+--- Incorrect stdout of 26 bytes:
+ The 
+  
+answer    is 42 
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test default passed.
+* Test ignore_bcw passed.
+* Test ignore_blank_lines passed.
+* Test ignore_case passed.
+* Test ignore_digits passed.
+* Test ignore_whitespace passed.
+** 6 tests passed, 5 tests failed
+Submission accepted - submission 1: answer.sh 47 bytes @ Mon Jun  6 13:36:48 2050
+Submission accepted - submission 1: answer_wrong.sh 407 bytes @ Mon Jun  6 13:38:24 2050
+*** Student z1234567 - submission 1: answer.sh 47 bytes @ Mon Jun  6 13:36:48 2050
+* Test check_bcw_marking passed (1 marks).
+* Test check_blank_lines_marking passed (1 marks).
+* Test check_case_marking passed (1 marks).
+* Test check_digits_marking passed (1 marks).
+* Test check_whitespace_marking passed (1 marks).
+* Test default_marking passed (1 marks).
+* Test ignore_bcw_marking passed (1 marks).
+* Test ignore_blank_lines_marking passed (1 marks).
+* Test ignore_case_marking passed (1 marks).
+* Test ignore_digits_marking passed (1 marks).
+* Test ignore_whitespace_marking passed (1 marks).
+** 11 tests passed, 0 tests failed - mark: 11/11
+*** Student z7654321 - submission 1: answer_wrong.sh 407 bytes @ Mon Jun  6 13:38:24 2050
+* Test check_bcw_marking failed.
+--- Incorrect stdout of 19 bytes:
+THE
+answer  is 42
+
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_blank_lines_marking failed.
+--- Incorrect stdout of 19 bytes:
+The
+answer is  42
+
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_case_marking failed.
+--- Incorrect stdout of 19 bytes:
+the
+
+ANSWER is  42
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_digits_marking failed.
+--- Incorrect stdout of 48 bytes:
+There is extra
+text here
+but answer is still 42
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test check_whitespace_marking failed.
+--- Incorrect stdout of 26 bytes:
+ The 
+  
+answer    is 42 
+
+--- Correct stdout is these 19 bytes:
+The
+
+answer is  42
+
+* Test default_marking passed (1 marks).
+* Test ignore_bcw_marking passed (1 marks).
+* Test ignore_blank_lines_marking passed (1 marks).
+* Test ignore_case_marking passed (1 marks).
+* Test ignore_digits_marking passed (1 marks).
+* Test ignore_whitespace_marking passed (1 marks).
+** 6 tests passed, 5 tests failed - mark: 6/11
+
+The difference between your output(-) and the correct output(+) is:
+...
+  * Test check_bcw failed.
++ --- Incorrect stdout of 19 bytes:
++ THE
++ answer  is 42
++ 
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+  * Test check_blank_lines failed.
++ --- Incorrect stdout of 19 bytes:
++ The
++ answer is  42
++ 
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+  * Test check_case failed.
++ --- Incorrect stdout of 19 bytes:
++ the
++ 
++ ANSWER is  42
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+  * Test check_digits failed.
++ --- Incorrect stdout of 48 bytes:
++ There is extra
++ text here
++ but answer is still 42
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+  * Test check_whitespace failed.
++ --- Incorrect stdout of 26 bytes:
++  The 
++   
++ answer    is 42 
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+  * Test default passed.
+  * Test ignore_digits passed.
+- * Test ignore_whitespace failed.
+?                          ^ ^^
+
++ * Test ignore_whitespace passed.
+?                          ^ ^^
+
+- ** 5 tests passed, 6 tests failed
+?    ^               ^
+
++ ** 6 tests passed, 5 tests failed
+?    ^               ^
+
+- Submission accepted - submission 1: answer.sh 47 bytes @ Mon Jun 06 13:36:48 2050
+?                                                                  ^
+
++ Submission accepted - submission 1: answer.sh 47 bytes @ Mon Jun  6 13:36:48 2050
+?                                                                  ^
+
+- Submission accepted - submission 1: answer_wrong.sh 407 bytes @ Mon Jun 06 13:38:24 2050
+?                                                                         ^
+
++ Submission accepted - submission 1: answer_wrong.sh 407 bytes @ Mon Jun  6 13:38:24 2050
+?                                                                         ^
+
+- *** Student z1234567 - submission 1: answer.sh 47 bytes @ Mon Jun 06 13:36:48 2050
+?                                                                   ^
+
++ *** Student z1234567 - submission 1: answer.sh 47 bytes @ Mon Jun  6 13:36:48 2050
+?                                                                   ^
+
+  ** 11 tests passed, 0 tests failed - mark: 11/11
+- *** Student z7654321 - submission 1: answer_wrong.sh 407 bytes @ Mon Jun 06 13:38:24 2050
+?                                                                          ^
+
++ *** Student z7654321 - submission 1: answer_wrong.sh 407 bytes @ Mon Jun  6 13:38:24 2050
+?                                                                          ^
+
+- * Test check_bcw_marking failed (1 marks).
+?                                ----------
+
++ * Test check_bcw_marking failed.
++ --- Incorrect stdout of 19 bytes:
++ THE
++ answer  is 42
++ 
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+- * Test check_blank_lines_marking failed (1 marks).
+?                                        ----------
+
++ * Test check_blank_lines_marking failed.
++ --- Incorrect stdout of 19 bytes:
++ The
++ answer is  42
++ 
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+- * Test check_case_marking failed (1 marks).
+?                                 ----------
+
++ * Test check_case_marking failed.
++ --- Incorrect stdout of 19 bytes:
++ the
++ 
++ ANSWER is  42
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+- * Test check_digits_marking failed (1 marks).
+?                                   ----------
+
++ * Test check_digits_marking failed.
++ --- Incorrect stdout of 48 bytes:
++ There is extra
++ text here
++ but answer is still 42
++ 
++ --- Correct stdout is these 19 bytes:
++ The
++ 
++ answer is  42
++ 
+- * Test check_whitespace_marking failed (1 marks).
+?                                       ----------
+
++ * Test check_whitespace_marking failed.
++ --- Incorrect stdout of 26 bytes:
++  The 
++   
++ answer    is 42 
++ 
+- * Test default_marking passed (1 marks).
+- * Test ignore_bcw_marking passed (1 marks).
+- * Test ignore_blank_lines_marking passed (1 marks).
+- * Test ignore_case_marking passed (1 marks).
+- * Test ignore_digits_marking passed (1 marks).
+- * Test ignore_whitespace_marking failed (1 marks).
+- ** 5 tests passed, 6 tests failed - mark: 5/11
+...
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add answer answer.tests
+mygive-test answer answer.sh
+mygive-test answer answer_wrong.sh
+FAKETIME="2050-06-06 13:36:48" mygive-submit answer z1234567 answer.sh
+FAKETIME="2050-06-06 13:38:24" mygive-submit answer z7654321 answer_wrong.sh
+FAKETIME="2050-06-06 13:38:30" mygive-mark answer
+Test 22_mark (test stdin & argument handling handling) - failed (errors)
+Your program produced these errors:
+tar: label1/stdout: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1/stdin: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1/arguments: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1_marking/stdout: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1_marking/marks: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1_marking/stdin: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1_marking/arguments: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label1_marking: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2/stdout: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2/stdin: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2/arguments: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2_marking/stdout: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2_marking/marks: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2_marking/stdin: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2_marking/arguments: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+tar: label2_marking: time stamp 2025-06-24 20:57:29 is 700556887 s in the future
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add test1 grep.tests
+mygive-test test1 grep.sh
+mygive-test test1 grep_wrong.sh
+FAKETIME="2003-04-13 13:47:33" mygive-submit test1 z5555555 grep.sh
+FAKETIME="2003-04-13 13:48:23" mygive-submit test1 z6666666 grep_wrong.sh
+FAKETIME="2003-04-13 13:49:22" mygive-mark test1
+Test 23_test (test incorrect stderr & incorrect exit) - failed (Incorrect output)
+Your program produced these 8 lines of output:
+directory .mygive created
+assignment project created
+* Test test1 failed.
+* Test test2 failed.
+* Test test3 failed.
+* Test test4 failed.
+* Test test5 failed.
+** 0 tests passed, 5 tests failed
+
+The correct 47 lines of output for this test were:
+directory .mygive created
+assignment project created
+* Test test1 passed.
+* Test test2 failed.
+--- Incorrect stdout of 2 bytes:
+2
+
+--- Correct stdout is these 2 bytes:
+1
+
+--- Incorrect stderr of 2 bytes:
+3
+
+--- Correct stderr is these 2 bytes:
+2
+
+Exit status of 1 incorrect should be 3
+* Test test3 failed.
+--- Incorrect stdout of 2 bytes:
+4
+
+--- Correct stdout is these 2 bytes:
+5
+
+Exit status of 5 incorrect should be 4
+* Test test4 failed.
+--- Incorrect stdout of 2 bytes:
+5
+
+--- Correct stdout is these 2 bytes:
+4
+
+--- Incorrect stderr of 2 bytes:
+4
+
+--- Correct stderr is these 2 bytes:
+5
+
+* Test test5 failed.
+--- Incorrect stderr of 2 bytes:
+5
+
+--- Correct stderr is these 2 bytes:
+4
+
+Exit status of 4 incorrect should be 5
+** 1 tests passed, 4 tests failed
+
+The difference between your output(-) and the correct output(+) is:
+...
+  assignment project created
+- * Test test1 failed.
+?              ^ ^^
+
++ * Test test1 passed.
+?              ^ ^^
+
+  * Test test2 failed.
++ --- Incorrect stdout of 2 bytes:
++ 2
++ 
++ --- Correct stdout is these 2 bytes:
++ 1
++ 
++ --- Incorrect stderr of 2 bytes:
++ 3
++ 
++ --- Correct stderr is these 2 bytes:
++ 2
++ 
++ Exit status of 1 incorrect should be 3
+  * Test test3 failed.
++ --- Incorrect stdout of 2 bytes:
++ 4
++ 
++ --- Correct stdout is these 2 bytes:
++ 5
++ 
++ Exit status of 5 incorrect should be 4
+  * Test test4 failed.
++ --- Incorrect stdout of 2 bytes:
++ 5
++ 
++ --- Correct stdout is these 2 bytes:
++ 4
++ 
++ --- Incorrect stderr of 2 bytes:
++ 4
++ 
++ --- Correct stderr is these 2 bytes:
++ 5
++ 
+  * Test test5 failed.
++ --- Incorrect stderr of 2 bytes:
++ 5
++ 
++ --- Correct stderr is these 2 bytes:
++ 4
++ 
++ Exit status of 4 incorrect should be 5
+- ** 0 tests passed, 5 tests failed
+?    ^               ^
+
++ ** 1 tests passed, 4 tests failed
+?    ^               ^
+
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add project stderr.tests
+mygive-test project stderr_wrong.sh
+Test 24_test (test incorrect stderr with no new line + incorrect exit) - failed (Incorrect output)
+Your program produced these 8 lines of output:
+directory .mygive created
+assignment project created
+* Test test1 failed.
+* Test test2 failed.
+* Test test3 failed.
+* Test test4 failed.
+* Test test5 failed.
+** 0 tests passed, 5 tests failed
+
+The correct 23 lines of output for this test were:
+directory .mygive created
+assignment project created
+* Test test1 failed.
+Missing newline at end of stdout
+Missing newline at end of stderr
+Exit status of 0 incorrect should be 3
+* Test test2 failed.
+Missing newline at end of stdout
+Missing newline at end of stderr
+Exit status of 0 incorrect should be 3
+* Test test3 failed.
+Missing newline at end of stdout
+Missing newline at end of stderr
+Exit status of 0 incorrect should be 4
+* Test test4 failed.
+Missing newline at end of stdout
+Missing newline at end of stderr
+Exit status of 0 incorrect should be 4
+* Test test5 failed.
+Missing newline at end of stdout
+Missing newline at end of stderr
+Exit status of 0 incorrect should be 5
+** 0 tests passed, 5 tests failed
+
+The difference between your output(-) and the correct output(+) is:
+...
+  * Test test1 failed.
++ Missing newline at end of stdout
++ Missing newline at end of stderr
++ Exit status of 0 incorrect should be 3
+  * Test test2 failed.
++ Missing newline at end of stdout
++ Missing newline at end of stderr
++ Exit status of 0 incorrect should be 3
+  * Test test3 failed.
++ Missing newline at end of stdout
++ Missing newline at end of stderr
++ Exit status of 0 incorrect should be 4
+  * Test test4 failed.
++ Missing newline at end of stdout
++ Missing newline at end of stderr
++ Exit status of 0 incorrect should be 4
+  * Test test5 failed.
++ Missing newline at end of stdout
++ Missing newline at end of stderr
++ Exit status of 0 incorrect should be 5
+  ** 0 tests passed, 5 tests failed
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add project stderr.tests
+mygive-test project stderr_no_newline.sh
+Test 25_mark (test incorrect stderr & incorrect exit) - failed (errors)
+Your program produced these errors:
+tar: test1/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1_marking/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1_marking/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1_marking/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1_marking/marks: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1_marking/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test1_marking: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2_marking/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2_marking/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2_marking/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2_marking/marks: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2_marking/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test2_marking: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3_marking/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3_marking/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3_marking/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3_marking/marks: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3_marking/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test3_marking: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4_marking/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4_marking/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4_marking/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4_marking/marks: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4_marking/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test4_marking: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5_marking/exit_status: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5_marking/stderr: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5_marking/stdout: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5_marking/marks: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5_marking/arguments: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+tar: test5_marking: time stamp 2025-06-24 20:57:29 is 641650147 s in the future
+You can reproduce this test by executing these commands:
+  rm -rf .mygive
+  mygive-add project stderr.tests
+FAKETIME="2005-02-23 09:39:04" mygive-submit project z5555555 stderr_wrong.sh
+FAKETIME="2005-02-23 09:40:41" mygive-submit project z6666666 stderr.sh
+FAKETIME="2005-02-23 09:42:20" mygive-submit project z7777777 stderr.sh
+FAKETIME="2005-02-23 09:44:17" mygive-submit project z6666666 stderr_wrong.sh
+FAKETIME="2005-02-23 09:45:46" mygive-submit project z5555555 stderr.sh
+FAKETIME="2005-02-23 09:46:05" mygive-submit project z7777777 stderr.sh
+FAKETIME="2005-02-23 09:46:41" mygive-submit project z7777777 stderr_no_newline.sh
+FAKETIME="2005-02-23 09:48:22" mygive-mark project
+4 tests passed 21 tests failed
